@@ -4,8 +4,13 @@ const Node = require('./libp2p-bundle.js');
 const pull = require('pull-stream');
 const Pushable = require('pull-pushable');
 const async = require('async');
+const Transaction = require('./transaction');
+const Block = require('./block');
+const Blockchain = require('./blockchain');
+
 const pushables = {};
 const protocol = '/blockchain/1.0.0';
+let blockchain;
 
 PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
   if (err) throw err;
@@ -30,6 +35,9 @@ PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
         conn,
       );
       pushables[peerInfo.id.toB58String()] = p;
+
+      // send existing blocks
+      blockchain.blocks.forEach(b => p.push(JSON.stringify(b)));
     })
   });
 
@@ -51,7 +59,11 @@ PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
       const peer = new PeerInfo(id);
       peer.multiaddrs.add(process.argv[5]);
       nodeListener.peerBook.put(peer)
-    })
+    });
+    blockchain = new Blockchain();
+  } else {
+    blockchain = new Blockchain();
+    blockchain.savePendingTransactions(id);
   }
 
   nodeListener.start((err) => {
@@ -60,10 +72,13 @@ PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
     nodeListener.handle(protocol, (protocol, conn) => {
       pull(
         conn,
-        pull.map((data) => {
-          return data.toString('utf8').replace('\n', '')
+        pull.drain(data => {
+          data = JSON.parse(data);
+          data.transactions = data.transactions.map(t => new Transaction(t));
+          const block = new Block(data);
+          blockchain.addBlock(block);
+          console.dir(block, { depth: null });
         }),
-        pull.drain(console.log),
       );
     });
 
@@ -73,12 +88,16 @@ PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
     });
 
     process.stdin.setEncoding('utf8');
-    process.openStdin().on('data', (chunk) => {
-      const data = chunk.toString();
+    process.openStdin().on('data', async (chunk) => {
+      const data = chunk.toString().replace(/[\r\n]/, '');
+      const transaction = new Transaction({ data });
+      await transaction.sign(id);
+      await blockchain.addTransaction(transaction);
+      await blockchain.savePendingTransactions(id);
       async.parallel(Object.keys(pushables).map(id => {
         return (callback) => {
           const p = pushables[id];
-          p.push(data);
+          p.push(JSON.stringify(blockchain.getBlock()));
           callback(null, true)
         }
       }))

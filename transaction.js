@@ -3,7 +3,7 @@ const PeerId = require('peer-id');
 
 class Transaction {
   constructor(options = {}) {
-    Object.assign(this, options, { timestamp: Date.now() });
+    Object.assign(this, { timestamp: Date.now() }, options);
   }
 
   calculateHash() {

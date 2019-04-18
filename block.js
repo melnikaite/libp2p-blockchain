@@ -9,7 +9,7 @@ class Block {
    * @param {Transaction[]} options.transactions
    */
   constructor(options = {}) {
-    Object.assign(this, options, { timestamp: Date.now() });
+    Object.assign(this, { timestamp: Date.now() }, options);
   }
 
   calculateHash() {
@@ -35,6 +35,8 @@ class Block {
   async verify() {
     let isValid = true;
 
+    if (this.hash !== this.calculateHash()) return false;
+
     const peerId = await new Promise((resolve, reject) => {
       PeerId.createFromPubKey(this.signer, (err, id) => {
         if (err) return reject(err);
@@ -52,7 +54,7 @@ class Block {
     if (!isValid) return false;
 
     const validatedTxs = await Promise.all(this.transactions.map(tx => tx.verify()));
-    if (validatedTxs.includes(false)) isValid = false;
+    if (validatedTxs.includes(false)) return false;
 
     return isValid;
   }

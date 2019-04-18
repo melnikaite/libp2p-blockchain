@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
+    "crypto-js": "^3.1.9-1",
     "libp2p": "^0.25.0",
     "libp2p-gossip-discovery": "git://github.com/melnikaite/js-libp2p-gossip-discovery.git#c66405a6d57cb9d9113993a8e200be9321f1945d",
     "libp2p-kad-dht": "^0.14.12",

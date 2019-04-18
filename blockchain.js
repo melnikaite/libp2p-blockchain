@@ -1,4 +1,6 @@
 const Block = require('./block');
+const fs = require('fs');
+const fsPromises = fs.promises;
 
 class Blockchain {
   /**
@@ -9,9 +11,14 @@ class Blockchain {
     Object.assign(this, { blocks: options.blocks || [], pendingTransactions: [] });
   }
 
-  addBlock(block) {
+  async addBlock(block) {
+    const previousBlock = this.blocks[block.blockNumber - 1];
+    if (previousBlock && block.previousHash !== previousBlock.calculateHash()) return false;
+
     return block.verify().then(isValid => {
       if (isValid) this.blocks[block.blockNumber] = block;
+      fsPromises.writeFile('./blockchain.json', JSON.stringify(this.blocks, null, 2));
+      return true;
     });
   }
 
@@ -43,9 +50,7 @@ class Blockchain {
     const validatedBlocks = await Promise.all(this.blocks.map(b => {
       const currentBlock = this.blocks[b.blockNumber];
       const previousBlock = this.blocks[b.blockNumber - 1];
-
       if (previousBlock && currentBlock.previousHash !== previousBlock.calculateHash()) return false;
-      if (currentBlock.hash !== currentBlock.calculateHash()) return false;
 
       return b.verify();
     }));

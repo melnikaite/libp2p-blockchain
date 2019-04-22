@@ -8,7 +8,11 @@ class Blockchain {
    * @param {Block[]} options.blocks
    */
   constructor(options = {}) {
-    Object.assign(this, { blocks: options.blocks || [], pendingTransactions: [] });
+    Object.assign(this, {
+      storage: options.storage || './data/blockchain.json',
+      blocks: options.blocks || [],
+      pendingTransactions: [],
+    });
   }
 
   async addBlock(block) {
@@ -17,8 +21,7 @@ class Blockchain {
 
     return block.verify().then(isValid => {
       if (isValid) this.blocks[block.blockNumber] = block;
-      fsPromises.writeFile('./blockchain.json', JSON.stringify(this.blocks, null, 2));
-      return true;
+      return fsPromises.writeFile(this.storage, JSON.stringify(this.blocks, null, 2));
     });
   }
 

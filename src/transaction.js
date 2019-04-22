@@ -29,6 +29,8 @@ class Transaction {
   async verify() {
     let isValid = true;
 
+    if (this.hash !== this.calculateHash()) return false;
+
     const peerId = await new Promise((resolve, reject) => {
       PeerId.createFromPubKey(this.signer, (err, id) => {
         if (err) return reject(err);

@@ -2,9 +2,10 @@
   "name": "libp2p-blockchain",
   "version": "1.0.0",
   "scripts": {
-    "peer0": "node peer.js ./peer0.json",
-    "peer1": "node peer.js ./peer1.json QmcAtQnEwfyME1rLnFEB8pT4MdohW9cMcBfmG5eZbRQRE9 CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= /ip4/116.203.148.99/tcp/10333",
-    "peer2": "node peer.js ./peer2.json QmcAtQnEwfyME1rLnFEB8pT4MdohW9cMcBfmG5eZbRQRE9 CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= /ip4/116.203.148.99/tcp/10333"
+    "peer0": "node src/peer.js ../keys/peer0.json",
+    "peer1": "node src/peer.js ../keys/peer1.json QmcAtQnEwfyME1rLnFEB8pT4MdohW9cMcBfmG5eZbRQRE9 CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= /ip4/116.203.148.99/tcp/10333",
+    "peer2": "node src/peer.js ../keys/peer2.json QmcAtQnEwfyME1rLnFEB8pT4MdohW9cMcBfmG5eZbRQRE9 CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= /ip4/116.203.148.99/tcp/10333",
+    "test": "jest"
   },
   "dependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
@@ -17,5 +18,13 @@
     "libp2p-spdy": "^0.13.3",
     "libp2p-tcp": "^0.13.0",
     "libp2p-websockets": "^0.12.2"
+  },
+  "devDependencies": {
+    "jest": "^24.7.1"
+  },
+  "jest": {
+    "watchPathIgnorePatterns": [
+      "/data/"
+    ]
   }
 }

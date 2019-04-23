@@ -7,6 +7,7 @@ const async = require('async');
 const Transaction = require('./transaction');
 const Block = require('./block');
 const Blockchain = require('./blockchain');
+const jayson = require('jayson');
 
 const pushables = {};
 const protocol = '/blockchain/1.0.0';
@@ -87,21 +88,30 @@ PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
       console.log(ma.toString())
     });
 
-    process.stdin.setEncoding('utf8');
-    process.openStdin().on('data', async (chunk) => {
-      const data = chunk.toString().replace(/[\r\n]/, '');
-      const transaction = new Transaction({ data });
-      await transaction.sign(id);
-      await blockchain.addTransaction(transaction);
-      await blockchain.savePendingTransactions(id);
-      async.parallel(Object.keys(pushables).map(id => {
-        return (callback) => {
-          const p = pushables[id];
-          p.push(JSON.stringify(blockchain.getBlock()));
-          callback(null, true)
-        }
-      }))
-    })
+    const server = jayson.server({
+      broadcast: async (args, callback) => {
+        console.log('broadcast function called');
+        const transaction = new Transaction(args);
+        await transaction.sign(id);
+        await blockchain.addTransaction(transaction);
+        await blockchain.savePendingTransactions(id);
+        const block = blockchain.getBlock();
+        const stringifiedBlock = JSON.stringify(block);
+        async.parallel(Object.keys(pushables).map(id => {
+          return (cb) => {
+            const p = pushables[id];
+            p.push(stringifiedBlock);
+            cb(null, true);
+          }
+        }), () => {
+          callback(null, block);
+        });
+      },
+    });
+
+    server.http().listen(3000, () => {
+      console.log('JSON-RPC is listening on http://localhost:3000');
+    });
   });
 
   setInterval(() => {

@@ -1,120 +1,65 @@
-const PeerId = require('peer-id');
 const PeerInfo = require('peer-info');
-const Node = require('./libp2p-bundle.js');
-const pull = require('pull-stream');
-const Pushable = require('pull-pushable');
-const async = require('async');
-const Transaction = require('./transaction');
-const Block = require('./block');
 const Blockchain = require('./blockchain');
-const jayson = require('jayson');
+const MessageHandler = require('./message-handler');
+const RPC = require('./rpc');
 
-const pushables = {};
-const protocol = '/blockchain/1.0.0';
-let blockchain;
+class Peer {
+  /**
+   *
+   * @param {PeerInfo} options.peerListener
+   * @param {PeerInfo} options.bootstrapPeer
+   */
+  constructor(options = {}) {
+    Object.assign(this, {
+      blockchain: new Blockchain(),
+      peerPort: 10333,
+      rpcPort: 3000,
+    }, options);
+    if (!PeerInfo.isPeerInfo(this.peerListener)) throw 'PeerInfo must be specified in options as a peerListener';
 
-PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
-  if (err) throw err;
-
-  const peerListener = new PeerInfo(id);
-
-  peerListener.multiaddrs.add('/ip4/0.0.0.0/tcp/10333');
-  const nodeListener = new Node({
-    peerInfo: peerListener
-  });
-
-  nodeListener.on('peer:discovery', (peerInfo) => {
-    console.log('peer:discovery', peerInfo.id.toB58String())
-  });
-
-  nodeListener.on('peer:connect', (peerInfo) => {
-    console.log('peer:connect', peerInfo.id.toB58String());
-    nodeListener.dialProtocol(peerInfo, protocol, (err, conn) => {
-      const p = Pushable();
-      pull(
-        p,
-        conn,
-      );
-      pushables[peerInfo.id.toB58String()] = p;
-
-      // send existing blocks
-      blockchain.blocks.forEach(b => p.push(JSON.stringify(b)));
-    })
-  });
-
-  nodeListener.on('peer:disconnect', (peerInfo) => {
-    console.log('peer:disconnect', peerInfo.id.toB58String());
-    delete pushables[peerInfo.id.toB58String()];
-  });
-
-  nodeListener.on('error', (err) => {
-    console.log('error', err)
-  });
-
-  // adding bootstrap peer
-  if (process.argv[3]) {
-    PeerId.createFromJSON({
-      id: process.argv[3],
-      pubKey: process.argv[4],
-    }, (err, id) => {
-      const peer = new PeerInfo(id);
-      peer.multiaddrs.add(process.argv[5]);
-      nodeListener.peerBook.put(peer)
+    this.peerListener.multiaddrs.add(`/ip4/0.0.0.0/tcp/${this.peerPort}`);
+    this.messageHandler = new MessageHandler({
+      peerListener: this.peerListener,
+      blockchain: this.blockchain,
+      bootstrapPeer: this.bootstrapPeer,
     });
-    blockchain = new Blockchain();
-  } else {
-    blockchain = new Blockchain();
-    blockchain.savePendingTransactions(id);
+
+    this.rpc = new RPC({
+      peerListener: this.peerListener,
+      blockchain: this.blockchain,
+    });
+    this.rpc.start();
+
+    this.savePendingTransactions();
+
+    this.selectProducer();
   }
 
-  nodeListener.start((err) => {
-    if (err) throw err;
+  async savePendingTransactions() {
+    if (this.blockchain.pendingTransactions.length > 0) {
+      console.log(`Found ${this.blockchain.pendingTransactions.length} pending transactions`);
+      await this.blockchain.savePendingTransactions(this.peerListener.id);
+      const block = this.blockchain.getBlock();
+      const data = JSON.stringify(block);
+      // todo: add message type
+      await this.broadcast(data);
+    }
+    setTimeout(this.savePendingTransactions.bind(this), 1000);
+  }
 
-    nodeListener.handle(protocol, (protocol, conn) => {
-      pull(
-        conn,
-        pull.drain(data => {
-          data = JSON.parse(data);
-          data.transactions = data.transactions.map(t => new Transaction(t));
-          const block = new Block(data);
-          blockchain.addBlock(block);
-          console.dir(block, { depth: null });
-        }),
-      );
-    });
+  // todo: broadcast selected from peerBook producer at 00 minutes
+  selectProducer() {
+  }
 
-    console.log('Listener ready, listening on:');
-    peerListener.multiaddrs.forEach((ma) => {
-      console.log(ma.toString())
-    });
+  broadcast(data) {
+    return Promise.all(Object.keys(this.messageHandler.pushables).map(id => {
+      return new Promise(resolve => {
+        const p = this.messageHandler.pushables[id];
+        p.push(data);
+        resolve(true);
+      });
+    }));
+  }
+}
 
-    const server = jayson.server({
-      broadcast: async (args, callback) => {
-        console.log('broadcast function called');
-        const transaction = new Transaction(args);
-        await transaction.sign(id);
-        await blockchain.addTransaction(transaction);
-        await blockchain.savePendingTransactions(id);
-        const block = blockchain.getBlock();
-        const stringifiedBlock = JSON.stringify(block);
-        async.parallel(Object.keys(pushables).map(id => {
-          return (cb) => {
-            const p = pushables[id];
-            p.push(stringifiedBlock);
-            cb(null, true);
-          }
-        }), () => {
-          callback(null, block);
-        });
-      },
-    });
-
-    server.http().listen(3000, () => {
-      console.log('JSON-RPC is listening on http://localhost:3000');
-    });
-  });
-
-  setInterval(() => {
-    // console.log(nodeListener.peerBook)
-  }, 5000)
-});
+module.exports = Peer;

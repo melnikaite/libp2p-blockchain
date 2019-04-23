@@ -3,6 +3,7 @@ const PeerId = require('peer-id');
 
 class Transaction {
   constructor(options = {}) {
+    // todo: should contain endpoint to execute and endpoint to verify execution (anyone in subchain should be able to verify)
     Object.assign(this, { timestamp: Date.now() }, options);
   }
 
@@ -45,6 +46,8 @@ class Transaction {
         resolve(isValid);
       });
     }).catch(_ => isValid = false);
+
+    // todo: call verification endpoint
 
     return isValid;
   }

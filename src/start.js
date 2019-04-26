@@ -1,22 +1,33 @@
 const PeerId = require('peer-id');
 const PeerInfo = require('peer-info');
 const Peer = require('./peer');
+const minimist = require('minimist');
 
-PeerId.createFromJSON(require(process.argv[2]), (err, id) => {
-  if (err) throw err;
+(async () => {
+  const options = {};
+  const argv = minimist(process.argv.slice(2));
 
-  const peerListener = new PeerInfo(id);
+  options.peerPort = argv['peer-port'];
+  options.rpcPort = argv['rpc-port'];
 
-  if (process.argv[3]) {
-    PeerId.createFromJSON({
-      id: process.argv[3],
-      pubKey: process.argv[4],
-    }, (err, id) => {
-      const bootstrapPeer = new PeerInfo(id);
-      bootstrapPeer.multiaddrs.add(process.argv[5]);
-      new Peer({ peerListener, bootstrapPeer });
+  const id = await new Promise((resolve, reject) => {
+    PeerId.createFromJSON(require(argv['peer-key']), (err, id) => {
+      if (err) return reject(err);
+      resolve(id);
     });
-  } else {
-    new Peer({ peerListener });
+  });
+  options.peerListener = new PeerInfo(id);
+
+  if (argv['boot-peer-pubkey']) {
+    const bootId = await new Promise((resolve, reject) => {
+      PeerId.createFromPubKey(argv['boot-peer-pubkey'], (err, id) => {
+        if (err) return reject(err);
+        resolve(id);
+      });
+    });
+    options.bootstrapPeer = new PeerInfo(bootId);
+    options.bootstrapPeer.multiaddrs.add(argv['boot-peer-addr']);
   }
-});
+
+  new Peer(options);
+})();

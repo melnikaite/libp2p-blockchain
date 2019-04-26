@@ -21,7 +21,7 @@ class Blockchain {
 
     return block.verify().then(isValid => {
       if (isValid) this.blocks[block.blockNumber] = block;
-      // todo: use db
+      // todo: use db to keep blocks and for updating data state
       return fsPromises.writeFile(this.storage, JSON.stringify(this.blocks, null, 2));
     });
   }

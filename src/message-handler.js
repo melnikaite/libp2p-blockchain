@@ -6,7 +6,7 @@ const Block = require('./block');
 
 class MessageHandler extends Node {
   constructor(options) {
-    super({peerInfo: options.peerListener});
+    super({ peerInfo: options.context.peerListener });
 
     Object.assign(this, {
       pushables: [],
@@ -29,7 +29,11 @@ class MessageHandler extends Node {
         this.pushables[peerInfo.id.toB58String()] = p;
 
         // send existing blocks
-        this.blockchain.blocks.forEach(b => p.push(JSON.stringify(b)));
+        p.push(JSON.stringify({ type: 'history', data: this.context.blockchain.blocks }));
+
+        // send existing producer
+        this.context.ensureValidProducer();
+        p.push(JSON.stringify({ type: 'producer', data: this.context.producer.pubKey }));
       })
     });
 
@@ -43,12 +47,14 @@ class MessageHandler extends Node {
     });
 
     // todo: load known peers from persisted storage
-    if (this.bootstrapPeer) {
+    if (this.context.bootstrapPeer) {
       // adding bootstrap peer
-      this.peerBook.put(this.bootstrapPeer);
+      this.peerBook.put(this.context.bootstrapPeer);
     } else {
+      this.context.producer.pubKey = this.context.peerListener.id.toJSON().pubKey;
+      this.context.producer.expiration = this.context.getProducerExpiration(1);
       // creating new chain
-      this.blockchain.savePendingTransactions(this.peerListener.id);
+      this.context.blockchain.savePendingTransactions(this.context.peerListener.id);
     }
 
     this.start((err) => {
@@ -59,18 +65,58 @@ class MessageHandler extends Node {
           conn,
           pull.drain(data => {
             data = JSON.parse(data);
-            // todo: check message type
-            // todo: handle election messages
-            data.transactions = data.transactions.map(t => new Transaction(t));
-            const block = new Block(data);
-            this.blockchain.addBlock(block);
-            console.dir(block, { depth: null });
+            switch (data.type) {
+            case 'history':
+              if (this.context.blockchain.blocks.length > 0) return;
+              data.data.forEach(block => {
+                block.transactions = block.transactions.map(t => new Transaction(t));
+                block = new Block(block);
+                this.context.blockchain.addBlock(block);
+                console.dir(block, { depth: null });
+              });
+              break;
+            case 'block':
+              data.data.transactions = data.data.transactions.map(t => new Transaction(t));
+              const block = new Block(data.data);
+              this.context.ensureValidProducer();
+              // check if producer is allowed
+              if (block.signer === this.context.producer.pubKey) {
+                this.context.blockchain.addBlock(block);
+                // todo: resend block to the rest of network if not yet saved
+                console.dir(block, { depth: null });
+              }
+              break;
+            case 'transaction':
+              this.context.ensureValidProducer();
+              if (this.context.producer.pubKey !== this.context.peerListener.id.toJSON().pubKey) return;
+              const transaction = new Transaction(data.data);
+              this.context.blockchain.addTransaction(transaction);
+              break;
+            case 'producer':
+              const producerExpiration = this.context.getProducerExpiration(1);
+              if (!this.context.producer.pubKey) {
+                this.context.producer.pubKey = data.data;
+                this.context.producer.expiration = producerExpiration;
+              }
+              break;
+            case 'election':
+              if ((new Date()).getSeconds() < 55) return;
+              const electionExpiration = this.context.getProducerExpiration(2);
+              // todo: check data.data.signature
+              // todo: add voter weight
+              // todo: resend proposed peer to the rest of network if not yet saved
+              this.context.proposedProducers.push({
+                pubKey: data.data.producer,
+                expiration: electionExpiration,
+              });
+              break;
+            }
           }),
         );
       });
 
       console.log('Listener ready, listening on:');
-      this.peerListener.multiaddrs.forEach((ma) => {
+      this.context.peerListener.multiaddrs.forEach((ma) => {
         console.log(ma.toString())
       });
 

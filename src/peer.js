@@ -37,6 +37,7 @@ class Peer {
 
     this.validateState();
 
+    // optional in this context
     setInterval(this.ensureValidProducer.bind(this), 1000);
   }
 

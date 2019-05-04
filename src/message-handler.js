@@ -54,6 +54,7 @@ class MessageHandler extends Node {
       this.context.producer.pubKey = this.context.peerListener.id.toJSON().pubKey;
       this.context.producer.expiration = this.context.getProducerExpiration(1);
       // creating new chain
+      this.context.blockchain.state.balances[this.context.producer.pubKey] = Number.MAX_SAFE_INTEGER;
       this.context.blockchain.savePendingTransactions(this.context.peerListener.id);
     }
 

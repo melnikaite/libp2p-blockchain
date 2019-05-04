@@ -21,7 +21,16 @@ class RPC {
           }
           callback(null, transaction);
         } catch (e) {
-          console.log(e.stack)
+          console.log(e.stack);
+          callback({ code: 500, message: e.message, stack: e.stack });
+        }
+      },
+      get: (args, callback) => {
+        try {
+          const result = args.reduce((res, prop) => res[prop], this.context.blockchain);
+          callback(null, result);
+        } catch (e) {
+          console.log(e.stack);
           callback({ code: 500, message: e.message, stack: e.stack });
         }
       },

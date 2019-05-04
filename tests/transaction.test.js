@@ -13,7 +13,7 @@ describe('Transaction', () => {
   });
 
   beforeEach(async () => {
-    transaction = new Transaction({ message: 'message' });
+    transaction = new Transaction({ state: { storage: { key: 'value' } } });
     await transaction.sign(peerId);
   });
 

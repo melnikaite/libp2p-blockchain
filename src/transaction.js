@@ -48,7 +48,6 @@ class Transaction {
     }).catch(_ => isValid = false);
 
     // todo: call verification endpoint
-    // todo: verify data state changes
 
     return isValid;
   }

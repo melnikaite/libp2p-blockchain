@@ -14,6 +14,7 @@ class Blockchain {
       blocks: options.blocks || [],
       state: options.state || { balances: {}, storage: {} },
       pendingTransactions: [],
+      bls: options.bls || { signatures: {} },
     });
   }
 
@@ -31,7 +32,9 @@ class Blockchain {
           this.blocks[block.blockNumber] = block;
           // todo: use db to keep blocks and for updating data state
           return fsPromises.writeFile(this.storage, JSON.stringify(this.blocks, null, 2));
-        }).catch(_ => {});
+        }).catch(e => {
+          console.log(e);
+        });
       }
     });
   }
@@ -57,7 +60,9 @@ class Blockchain {
       if (isValid) {
         return this.applyStateChanges(transaction).then(_ => {
           this.pendingTransactions.push(transaction);
-        }).catch(_ => {});
+        }).catch(e => {
+          console.log(e);
+        });
       }
     });
   }

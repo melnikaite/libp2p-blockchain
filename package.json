@@ -2,13 +2,14 @@
   "name": "libp2p-blockchain",
   "version": "1.0.0",
   "scripts": {
-    "peer0": "node --async-stack-traces src/start.js --peer-key ../keys/peer0.json --peer-port 10333 --rpc-port 3000",
-    "peer1": "node --async-stack-traces src/start.js --peer-key ../keys/peer1.json --peer-port 10334 --rpc-port 3001 --boot-peer-pubkey CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= --boot-peer-addr /ip4/127.0.0.1/tcp/10333",
-    "peer2": "node --async-stack-traces src/start.js --peer-key ../keys/peer2.json --peer-port 10335 --rpc-port 3002 --boot-peer-pubkey CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= --boot-peer-addr /ip4/127.0.0.1/tcp/10333",
+    "peer0": "node --async-stack-traces --inspect=9229 src/start.js --peer-key ../keys/peer0.json --peer-port 10333 --rpc-port 3000",
+    "peer1": "node --async-stack-traces --inspect=9230 src/start.js --peer-key ../keys/peer1.json --peer-port 10334 --rpc-port 3001 --boot-peer-pubkey CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= --boot-peer-addr /ip4/127.0.0.1/tcp/10333",
+    "peer2": "node --async-stack-traces --inspect=9231 src/start.js --peer-key ../keys/peer2.json --peer-port 10335 --rpc-port 3002 --boot-peer-pubkey CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9Rewz6i0034nmatRuJjLc6M5CuxaLrH6lTAsDRnT3eKCEca7yj9JTfbYy7ykWpMVGcCj+6gddl+MlVyQUVxrKJ2hUMsmyNzO63N0qxdFAEQ7aJwjUmGWChrSq5OLeFoglZaLUs4TYYj3Z2k9oZqlTgYJeLs5p1oBTqc1cLpUyRQF7JR4V1R877yf3P7zdfBvJjZtxkeYDpwSzf1m1mERCVRqHL5DYAoJ0fLZnAq/cWB+EkZV+w6Z3GqaOoxeJ4XfC5I/f4aSWu6qCawRwN4H6b4D4yiGAgRr7+kXK/0AZNUGHS57HxJac6BBPEVTuFT6Mw3SCud8/4X5NSyzO5IxfAgMBAAE= --boot-peer-addr /ip4/127.0.0.1/tcp/10333",
     "test": "jest"
   },
   "dependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
+    "bls-lib": "^0.3.4",
     "crypto-js": "^3.1.9-1",
     "jayson": "^3.0.1",
     "libp2p": "^0.25.0",

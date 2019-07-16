@@ -42,6 +42,8 @@ class Peer {
   }
 
   async savePendingTransactions() {
+    setTimeout(this.savePendingTransactions.bind(this), 1000);
+
     // create and broadcast new block only if this peer is producer
     if (this.blockchain.pendingTransactions.length > 0 && this.producer.pubKey === this.peerListener.id.toJSON().pubKey) {
       console.log(`Found ${this.blockchain.pendingTransactions.length} pending transactions`);
@@ -50,7 +52,6 @@ class Peer {
       const data = JSON.stringify({ type: 'block', data: block });
       await this.broadcast(data);
     }
-    setTimeout(this.savePendingTransactions.bind(this), 1000);
   }
 
   ensureValidProducer() {
@@ -73,21 +74,24 @@ class Peer {
 
   selectProducer() {
     if ((new Date()).getSeconds() >= 55) {
-      const keys = Object.keys(this.messageHandler.peerBook._peers);
+      const keys = Object.values(this.messageHandler.peerBook._peers).map(p => p.id.toJSON().pubKey);
+      keys.push(this.peerListener.id.toJSON().pubKey);
       const id = Math.round(Math.random() * (keys.length - 1));
       const electionExpiration = this.getProducerExpiration(2);
       if (keys[id]) {
-        const producer = this.messageHandler.peerBook._peers[keys[id]].id.toJSON().pubKey;
+        const producer = keys[id];
         this.proposedProducers.push({
           pubKey: producer,
           expiration: electionExpiration,
         });
-        this.peerListener.id._privKey.sign(producer, (err, signature) => {
+        this.peerListener.id._privKey.sign(producer, async (err, signature) => {
           if (err) return;
           signature = signature.toString('hex');
-          const data = JSON.stringify({ type: 'election', data: { producer, signature } });
-          this.broadcast(data);
-          console.log(`Selected from ${keys.length} peers and proposed as producer ${keys[id]}`);
+          const data = JSON.stringify({
+            type: 'election',
+            data: { producer, signature, from: this.peerListener.id.toJSON().pubKey }
+          });
+          await this.broadcast(data);
         });
       } else {
         this.producer.pubKey = this.peerListener.id.toJSON().pubKey;
@@ -124,6 +128,7 @@ class Peer {
     PeerId.createFromPubKey(pubKey, (err, peerId) => {
       if (err) return;
       const p = this.messageHandler.pushables[peerId._idB58String];
+      if (!p) return;
       p.push(data);
     });
   }
